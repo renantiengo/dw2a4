@@ -1,13 +1,13 @@
 export default class UsuarioMiddleware{
-
-  constructor (usuarios){
-    this.usuarios = usuarios;
+ constructor(usuarioRepository) {
+    this.usuarioRepository = usuarioRepository;
   }
 
-  usuarioExiste(req, res, next) {
-    const usuario = this.usuarios.find(u => u.id == req.params.id);
-    if(!usuario) {
-        return res.status(404).json({ erro: 'Usuário não encontrado' });
+  async usuarioExiste(req, res, next) {
+    const usuario = await this.usuarioRepository.getById(req.params.id)
+    
+    if (!usuario) {
+      return res.status(404).json({ erro: 'Usuário não encontrado' });
     }
     req.usuario = usuario;
     next();

@@ -1,34 +1,44 @@
-export default class UsuarioController{
+import Usuario from './Usuario'
 
-  constructor(usuarios) {    
-    this.usuarios = usuarios;
+const usuarioViewModel = (usuario) => ({
+  id: usuario.id,
+  nome: usuario.nome,
+  email: usuario.email
+})
+
+export default class UsuarioController {
+  constructor(usuarioRepository) {
+    this.usuarioRepository = usuarioRepository;
   }
 
-  //GET / usuarios
-  index(req, res){
-    res.status(200).json(this.usuarios);
+  async index(req, res) {
+    const usuarios = await this.usuarioRepository.getAll();
+    res.status(200).json(usuarios.map(u => usuarioViewModel(u)));
   }
 
-  save(req, res){
-    const usuario = {
-        id: req.body.id,
-        nome: req.body.nome
-    }
-    this.usuarios.push(usuario)
-    res.status(201).json(usuario);
+  async save(req, res) {
+    //dados que serao passado pelo body na requisicao da api
+    const { nome, email, senha } = req.body;
+    const usuario = new Usuario(nome, email, senha);
+    //repository do construtor
+    await this.usuarioRepository.save(usuario)
+    //view model para responder com apenas os dados necessarios
+    res.status(201).json(usuarioViewModel(usuario));
   }
 
-  show(req, res){
-    return res.status(200).json(req.usuario);
+  show(req, res) {
+    return res.status(200).json(usuarioViewModel(req.usuario));
   }
 
-  update(req, res){
-    req.usuario.nome = req.body.nome;
-    return res.status(200).json(req.usuario);
+  async update(req, res) {
+    const { nome, email, senha } = req.body;
+    const usuario = new Usuario(nome, email, senha, req.usuario.id);
+    const usuarioAtualizado = await this.usuarioRepository.update(usuario)  
+    return res.status(200).json(usuarioViewModel(usuarioAtualizado));
   }
-  delete(req, res){
-    const index = this.usuarios.indexOf(req.usuario);
-    this.usuarios.splice(index, 1);
+
+  async delete(req, res) {
+    await this.usuarioRepository.delete(req.usuario)
     res.status(204).end();
   }
 }
